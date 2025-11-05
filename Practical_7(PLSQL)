@@ -1,0 +1,58 @@
+🗃️ Table Structure Example
+CREATE TABLE O_RollCall (
+    roll_no NUMBER PRIMARY KEY,
+    name VARCHAR2(30)
+);
+
+CREATE TABLE N_RollCall (
+    roll_no NUMBER,
+    name VARCHAR2(30)
+);
+
+Sample Data
+INSERT INTO O_RollCall VALUES (1, 'Aarav');
+INSERT INTO O_RollCall VALUES (2, 'Priya');
+
+INSERT INTO N_RollCall VALUES (2, 'Priya');
+INSERT INTO N_RollCall VALUES (3, 'Ravi');
+INSERT INTO N_RollCall VALUES (4, 'Sneha');
+COMMIT;
+
+⚙️ PL/SQL Code (Parameterized Cursor Example)
+SET SERVEROUTPUT ON;
+
+DECLARE
+    -- Define a parameterized cursor that selects rows from N_RollCall
+    CURSOR c_new_records(p_roll NUMBER) IS
+        SELECT roll_no, name
+        FROM N_RollCall
+        WHERE roll_no = p_roll;
+
+    v_roll N_RollCall.roll_no%TYPE;
+    v_name N_RollCall.name%TYPE;
+
+BEGIN
+    -- Loop through each record in N_RollCall
+    FOR rec IN (SELECT roll_no FROM N_RollCall) LOOP
+        -- Open parameterized cursor for that roll_no
+        OPEN c_new_records(rec.roll_no);
+        FETCH c_new_records INTO v_roll, v_name;
+
+        -- Check if that roll_no already exists in O_RollCall
+        DECLARE
+            v_count NUMBER;
+        BEGIN
+            SELECT COUNT(*) INTO v_count FROM O_RollCall WHERE roll_no = v_roll;
+
+            IF v_count = 0 THEN
+                INSERT INTO O_RollCall VALUES (v_roll, v_name);
+                DBMS_OUTPUT.PUT_LINE('Inserted Roll No: ' || v_roll || ' Name: ' || v_name);
+            ELSE
+                DBMS_OUTPUT.PUT_LINE('Skipped (Already Exists): Roll No ' || v_roll);
+            END IF;
+        END;
+
+        CLOSE c_new_records;
+    END LOOP;
+END;
+/
