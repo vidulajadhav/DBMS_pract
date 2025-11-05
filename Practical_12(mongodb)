@@ -1,0 +1,60 @@
+🗂️ Database Name: shopDB
+📘 Collection: sales
+🧩 Step 1: Insert Sample Documents
+use shopDB
+
+db.sales.insertMany([
+  { _id: 1, product: "Milk",   quantity: 2, price: 25 },
+  { _id: 2, product: "Bread",  quantity: 1, price: 20 },
+  { _id: 3, product: "Milk",   quantity: 3, price: 25 },
+  { _id: 4, product: "Eggs",   quantity: 12, price: 5 },
+  { _id: 5, product: "Bread",  quantity: 2, price: 20 },
+  { _id: 6, product: "Milk",   quantity: 1, price: 25 }
+])
+
+⚙️ Step 2: Define the Map Function
+
+The Map function emits key–value pairs.
+Here, the key = product name, and the value = total sale amount for that item.
+
+var mapFunction = function() {
+  var total = this.quantity * this.price;
+  emit(this.product, total);
+};
+
+⚙️ Step 3: Define the Reduce Function
+
+The Reduce function groups all emitted values (with the same key) and sums them up.
+
+var reduceFunction = function(key, values) {
+  return Array.sum(values);
+};
+
+⚙️ Step 4: Execute Map-Reduce
+
+This will calculate total sales for each product and store results in a new collection total_sales.
+
+db.sales.mapReduce(
+  mapFunction,
+  reduceFunction,
+  { out: "total_sales" }
+)
+
+⚙️ Step 5: Display the Result
+db.total_sales.find().pretty()
+
+
+📊 Expected Output:
+
+{ "_id": "Bread", "value": 60 }
+{ "_id": "Eggs", "value": 60 }
+{ "_id": "Milk", "value": 150 }
+
+
+✅ Explanation:
+
+Bread: (1×20) + (2×20) = 60
+
+Eggs: (12×5) = 60
+
+Milk: (2×25) + (3×25) + (1×25) = 150
