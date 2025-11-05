@@ -1,0 +1,77 @@
+-- Create Borrower table
+CREATE TABLE Borrower(
+  Rollno NUMBER(4),
+  Name VARCHAR2(20),
+  DateofIssue DATE,
+  NameofBook VARCHAR2(30),
+  Status VARCHAR2(10)
+);
+
+-- Create Fine table
+CREATE TABLE Fine(
+  Rollno NUMBER(4),
+  FineDate DATE,
+  Amount NUMBER(10)
+);
+
+-- Insert sample data
+INSERT INTO Borrower VALUES (14, 'Ram', TO_DATE('2025-09-19','YYYY-MM-DD'), 'Operating System', 'I');
+INSERT INTO Borrower VALUES (27, 'Soham', TO_DATE('2025-07-24','YYYY-MM-DD'), 'Object Oriented Programming', 'I');
+INSERT INTO Borrower VALUES (34, 'Mohan', TO_DATE('2025-10-12','YYYY-MM-DD'), 'Microprocessor', 'I');
+INSERT INTO Borrower VALUES (48, 'Om', TO_DATE('2025-10-1','YYYY-MM-DD'), 'Mechanics', 'I');
+COMMIT;
+/
+
+-- ===========================================
+-- PROCEDURE: Calculate Fine
+-- ===========================================
+CREATE OR REPLACE PROCEDURE calc_Fine(r IN NUMBER, b IN VARCHAR2) AS
+  doi DATE;
+  diff NUMBER;
+  fineAmt NUMBER;
+BEGIN
+  -- Get Date of Issue
+  SELECT DateofIssue INTO doi 
+  FROM Borrower 
+  WHERE Rollno = r AND NameofBook = b;
+
+  -- Calculate difference in days
+  diff := TRUNC(SYSDATE - doi);
+
+  -- Calculate fine
+  IF diff BETWEEN 15 AND 30 THEN
+    fineAmt := diff * 5;
+    INSERT INTO Fine VALUES (r, SYSDATE, fineAmt);
+
+  ELSIF diff > 30 THEN
+    fineAmt := diff * 50;
+    INSERT INTO Fine VALUES (r, SYSDATE, fineAmt);
+
+  ELSE
+    fineAmt := 0;
+  END IF;
+
+  -- Update status to Returned (R)
+  UPDATE Borrower SET Status='R' WHERE Rollno=r AND NameofBook=b;
+
+  DBMS_OUTPUT.PUT_LINE('Fine for Roll No ' || r || ' = Rs ' || fineAmt);
+
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    DBMS_OUTPUT.PUT_LINE('No such record found in Borrower table!');
+END;
+/
+-- ===========================================
+-- TEST EXECUTION
+-- ===========================================
+BEGIN
+  calc_Fine(14, 'Operating System');
+  calc_Fine(27, 'Object Oriented Programming');
+  calc_Fine(34, 'Microprocessor');
+  calc_Fine(48, 'Mechanics');
+END;
+/
+
+SELECT * FROM Fine;
+SELECT * FROM Borrower;
+/
