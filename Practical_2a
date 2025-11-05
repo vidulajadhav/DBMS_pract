@@ -1,0 +1,42 @@
+-- 1. Create a table 'Department'
+CREATE TABLE Department (
+    dept_id INT PRIMARY KEY,
+    dept_name VARCHAR(50) UNIQUE NOT NULL
+);
+
+-- 2. Create a table 'Student' with constraints
+CREATE TABLE Student (
+    student_id INT PRIMARY KEY,
+    student_name VARCHAR(50) NOT NULL,
+    age INT CHECK(age >= 18),
+    dept_id INT,
+    marks INT,
+    CONSTRAINT fk_dept FOREIGN KEY (dept_id) REFERENCES Department(dept_id)
+);
+
+-- 3. Create a sequence (used for generating unique IDs)
+CREATE SEQUENCE student_seq START WITH 1 INCREMENT BY 1;
+
+-- 4. Create a view to show student details with department name
+CREATE VIEW student_view AS
+SELECT s.student_id, s.student_name, s.marks, d.dept_name
+FROM Student s
+JOIN Department d ON s.dept_id = d.dept_id;
+
+-- 5. Create an index to speed up searches on student_name
+CREATE INDEX idx_student_name ON Student(student_name);
+
+-- 6. Create a synonym for the Student table (works in Oracle)
+CREATE SYNONYM stud FOR Student;
+
+
+// how to run the code
+sudo apt update
+sudo apt install mysql-server -y
+sudo mysql -u root -p
+
+Then run the SQL commands directly inside the MySQL shell:
+
+CREATE DATABASE student_db;
+USE student_db;
+-- paste the above SQL scripts
