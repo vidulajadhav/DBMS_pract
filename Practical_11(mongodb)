@@ -1,0 +1,69 @@
+🗂️ Database Name: collegeDB
+📘 Collection: students
+
+🧩 Step 1: Create & Insert Documents
+use collegeDB
+
+db.students.insertMany([
+  { _id: 1, name: "Ram",   dept: "CSE", marks: 85, city: "Pune" },
+  { _id: 2, name: "Soham", dept: "CSE", marks: 92, city: "Pune" },
+  { _id: 3, name: "Mohan", dept: "IT",  marks: 76, city: "Mumbai" },
+  { _id: 4, name: "Om",    dept: "ENTC", marks: 68, city: "Nashik" },
+  { _id: 5, name: "Asha",  dept: "IT",  marks: 90, city: "Pune" },
+  { _id: 6, name: "Sneha", dept: "CSE", marks: 82, city: "Nashik" }
+])
+
+⚙️ Part 1: Aggregation Queries
+
+Aggregation is used for grouping, filtering, and performing calculations (like SUM, AVG, COUNT).
+
+① Group by Department and Find Average Marks
+db.students.aggregate([
+  { $group: { _id: "$dept", avgMarks: { $avg: "$marks" } } }
+])
+
+
+📊 Output:
+
+{ "_id": "CSE", "avgMarks": 86.33 }
+{ "_id": "IT", "avgMarks": 83 }
+{ "_id": "ENTC", "avgMarks": 68 }
+
+② Count Students per City
+db.students.aggregate([
+  { $group: { _id: "$city", totalStudents: { $sum: 1 } } }
+])
+
+③ Find Top Performing Students (marks > 85)
+db.students.aggregate([
+  { $match: { marks: { $gt: 85 } } },
+  { $project: { name: 1, dept: 1, marks: 1, _id: 0 } }
+])
+
+④ Department-Wise Highest Marks
+db.students.aggregate([
+  { $group: { _id: "$dept", maxMarks: { $max: "$marks" } } }
+])
+
+⚡ Part 2: Indexing
+
+Indexes improve the search speed of queries.
+
+① Create an Index on Department
+db.students.createIndex({ dept: 1 })
+
+
+✅ 1 means ascending order.
+Now MongoDB will quickly search/filter by dept.
+
+② Create a Compound Index (on dept and marks)
+db.students.createIndex({ dept: 1, marks: -1 })
+
+
+✅ -1 means descending order for marks.
+
+③ Check Indexes Created
+db.students.getIndexes()
+
+④ Search Using Indexed Field
+db.students.find({ dept: "CSE" })
