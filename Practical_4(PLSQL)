@@ -75,3 +75,12 @@ END;
 SELECT * FROM Fine;
 SELECT * FROM Borrower;
 /
+
+
+output:
+🧮 Step-by-Step Fine Calculation
+Rollno	Date of Issue	Days since issue (as of 2025-11-05)	Condition	Fine/day	Total Fine
+14	2025-09-19	47 days	> 30 → ₹50/day	50	₹2,350
+27	2025-07-24	104 days	> 30 → ₹50/day	50	₹5,200
+34	2025-10-12	24 days	Between 15–30 → ₹5/day	5	₹120
+48	2025-10-01	35 days	> 30 → ₹50/day	50	₹1,750
