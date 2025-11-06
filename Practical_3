@@ -33,6 +33,7 @@ INNER JOIN Department d ON e.dept_id = d.dept_id;
 
 🧠 Explanation:
 Shows employees with their department names. Only matching records appear.
+(All dept_ids 1, 2, 3 exist in Department, so no one is excluded.)
 
 🧩 2. LEFT JOIN
 SELECT e.emp_name, d.dept_name
@@ -42,6 +43,7 @@ LEFT JOIN Department d ON e.dept_id = d.dept_id;
 
 🧠 Explanation:
 Shows all employees, even if their department has no match (department data will show as NULL).
+(If any employee had a missing or unmatched dept_id, that row would show NULL in dept_name.)
 
 🧩 3. RIGHT JOIN
 SELECT e.emp_name, d.dept_name
@@ -51,15 +53,23 @@ RIGHT JOIN Department d ON e.dept_id = d.dept_id;
 
 🧠 Explanation:
 Shows all departments, including those without employees.
+(🧠 If a department had no employees, it would appear with emp_name = NULL.)
 
 🧩 4. FULL OUTER JOIN (works in PostgreSQL / Oracle)
 SELECT e.emp_name, d.dept_name
 FROM Employee e
-FULL OUTER JOIN Department d ON e.dept_id = d.dept_id;
+LEFT JOIN Department d ON e.dept_id = d.dept_id
+
+UNION
+
+SELECT e.emp_name, d.dept_name
+FROM Employee e
+RIGHT JOIN Department d ON e.dept_id = d.dept_id;
 
 
 🧠 Explanation:
 Combines LEFT and RIGHT joins — shows all employees and departments whether they match or not.
+UNION automatically removes duplicates, so this behaves like a full outer join.
 
 🧩 5. CROSS JOIN
 SELECT e.emp_name, d.dept_name
