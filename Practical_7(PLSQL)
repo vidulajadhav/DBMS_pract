@@ -56,3 +56,86 @@ BEGIN
     END LOOP;
 END;
 /
+
+delimiter:
+-- =======================================================
+-- Create database and use it
+-- =======================================================
+CREATE DATABASE IF NOT EXISTS schoolDB;
+USE schoolDB;
+
+-- =======================================================
+-- Drop tables if they exist
+-- =======================================================
+DROP TABLE IF EXISTS O_RollCall;
+DROP TABLE IF EXISTS N_RollCall;
+
+-- =======================================================
+-- Step 1: Create Tables
+-- =======================================================
+CREATE TABLE O_RollCall (
+    roll_no INT PRIMARY KEY,
+    name VARCHAR(30)
+);
+
+CREATE TABLE N_RollCall (
+    roll_no INT,
+    name VARCHAR(30)
+);
+
+-- =======================================================
+-- Step 2: Insert Sample Data
+-- =======================================================
+INSERT INTO O_RollCall VALUES (1, 'Aarav');
+INSERT INTO O_RollCall VALUES (2, 'Priya');
+
+INSERT INTO N_RollCall VALUES (2, 'Priya');
+INSERT INTO N_RollCall VALUES (3, 'Ravi');
+INSERT INTO N_RollCall VALUES (4, 'Sneha');
+
+-- =======================================================
+-- Step 3: Stored Procedure to Insert New Records
+-- =======================================================
+DELIMITER $$
+
+CREATE PROCEDURE merge_rollcalls()
+BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE v_roll INT;
+    DECLARE v_name VARCHAR(30);
+
+    -- Declare cursor for all rows in N_RollCall
+    DECLARE cur CURSOR FOR SELECT roll_no, name FROM N_RollCall;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO v_roll, v_name;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        -- Check if roll_no already exists in O_RollCall
+        IF NOT EXISTS (SELECT 1 FROM O_RollCall WHERE roll_no = v_roll) THEN
+            INSERT INTO O_RollCall(roll_no, name) VALUES (v_roll, v_name);
+            SELECT CONCAT('Inserted Roll No: ', v_roll, ' Name: ', v_name) AS Output;
+        ELSE
+            SELECT CONCAT('Skipped (Already Exists): Roll No ', v_roll) AS Output;
+        END IF;
+    END LOOP;
+
+    CLOSE cur;
+END$$
+
+DELIMITER ;
+
+-- =======================================================
+-- Step 4: Execute the Procedure
+-- =======================================================
+CALL merge_rollcalls();
+
+-- =======================================================
+-- Step 5: View the Results
+-- =======================================================
+SELECT * FROM O_RollCall;
