@@ -19,3 +19,49 @@ BEGIN
   COMMIT;  -- save the changes
 END;
 /
+
+delimiter:
+-- =======================================================
+-- Create table to store radius and area
+-- =======================================================
+CREATE DATABASE IF NOT EXISTS mathDB;
+USE mathDB;
+
+DROP TABLE IF EXISTS areas;
+
+CREATE TABLE areas (
+  radius INT,
+  area   DECIMAL(10,2)
+);
+
+-- =======================================================
+-- Stored Procedure to calculate areas
+-- =======================================================
+DELIMITER $$
+
+CREATE PROCEDURE calculate_areas()
+BEGIN
+  DECLARE r INT DEFAULT 5;
+  DECLARE a DECIMAL(10,2);
+  DECLARE pi DECIMAL(10,5) DEFAULT 3.14159;
+
+  -- Loop through radius 5 to 9
+  WHILE r <= 9 DO
+    SET a = pi * r * r;
+    INSERT INTO areas(radius, area) VALUES (r, a);
+    SELECT CONCAT('Radius: ', r, ' | Area: ', a) AS Output;
+    SET r = r + 1;
+  END WHILE;
+END$$
+
+DELIMITER ;
+
+-- =======================================================
+-- Execute the procedure
+-- =======================================================
+CALL calculate_areas();
+
+-- =======================================================
+-- View the results
+-- =======================================================
+SELECT * FROM areas;
