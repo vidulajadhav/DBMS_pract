@@ -84,3 +84,99 @@ Rollno	Date of Issue	Days since issue (as of 2025-11-05)	Condition	Fine/day	Tota
 27	2025-07-24	104 days	> 30 → ₹50/day	50	₹5,200
 34	2025-10-12	24 days	Between 15–30 → ₹5/day	5	₹120
 48	2025-10-01	35 days	> 30 → ₹50/day	50	₹1,750
+
+
+delimiter code:
+-- =======================================================
+-- Create database and use it
+-- =======================================================
+CREATE DATABASE IF NOT EXISTS libraryDB;
+USE libraryDB;
+
+-- =======================================================
+-- Create Borrower table
+-- =======================================================
+CREATE TABLE Borrower (
+  Rollno INT(4),
+  Name VARCHAR(20),
+  DateofIssue DATE,
+  NameofBook VARCHAR(30),
+  Status VARCHAR(10)
+);
+
+-- =======================================================
+-- Create Fine table
+-- =======================================================
+CREATE TABLE Fine (
+  Rollno INT(4),
+  FineDate DATE,
+  Amount DECIMAL(10,2)
+);
+
+-- =======================================================
+-- Insert sample data
+-- =======================================================
+INSERT INTO Borrower VALUES 
+(14, 'Ram', '2025-09-19', 'Operating System', 'I'),
+(27, 'Soham', '2025-07-24', 'Object Oriented Programming', 'I'),
+(34, 'Mohan', '2025-10-12', 'Microprocessor', 'I'),
+(48, 'Om', '2025-10-01', 'Mechanics', 'I');
+
+-- =======================================================
+-- Create Stored Procedure to Calculate Fine
+-- =======================================================
+DELIMITER $$
+
+CREATE PROCEDURE calc_Fine(IN r INT, IN b VARCHAR(50))
+BEGIN
+  DECLARE doi DATE;
+  DECLARE diff INT;
+  DECLARE fineAmt DECIMAL(10,2);
+  
+  -- Get Date of Issue
+  SELECT DateofIssue INTO doi
+  FROM Borrower
+  WHERE Rollno = r AND NameofBook = b
+  LIMIT 1;
+
+  -- Calculate days difference
+  SET diff = DATEDIFF(CURDATE(), doi);
+
+  -- Calculate fine logic
+  IF diff BETWEEN 15 AND 30 THEN
+    SET fineAmt = diff * 5;
+    INSERT INTO Fine VALUES (r, CURDATE(), fineAmt);
+
+  ELSEIF diff > 30 THEN
+    SET fineAmt = diff * 50;
+    INSERT INTO Fine VALUES (r, CURDATE(), fineAmt);
+
+  ELSE
+    SET fineAmt = 0;
+  END IF;
+
+  -- Update status to Returned
+  UPDATE Borrower 
+  SET Status = 'R' 
+  WHERE Rollno = r AND NameofBook = b;
+
+  -- Display result
+  SELECT CONCAT('Fine for Roll No ', r, ' = Rs ', fineAmt) AS Result;
+
+END$$
+
+DELIMITER ;
+
+-- =======================================================
+-- Test Execution
+-- =======================================================
+CALL calc_Fine(14, 'Operating System');
+CALL calc_Fine(27, 'Object Oriented Programming');
+CALL calc_Fine(34, 'Microprocessor');
+CALL calc_Fine(48, 'Mechanics');
+
+-- =======================================================
+-- View Results
+-- =======================================================
+SELECT * FROM Fine;
+SELECT * FROM Borrower;
