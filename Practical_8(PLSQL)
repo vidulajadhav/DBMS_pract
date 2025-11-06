@@ -45,3 +45,85 @@ SELECT * FROM Library;
 
 -- Display records from the audit table
 SELECT * FROM Library_Audit;
+
+
+delimiter:
+-- =======================================================
+-- Create database and use it
+-- =======================================================
+CREATE DATABASE IF NOT EXISTS libraryDB;
+USE libraryDB;
+
+-- =======================================================
+-- Drop tables if they exist
+-- =======================================================
+DROP TABLE IF EXISTS Library;
+DROP TABLE IF EXISTS Library_Audit;
+
+-- =======================================================
+-- Step 1: Create Tables
+-- =======================================================
+CREATE TABLE Library (
+    book_id INT PRIMARY KEY,
+    book_name VARCHAR(50),
+    author VARCHAR(50),
+    price DECIMAL(10,2)
+);
+
+CREATE TABLE Library_Audit (
+    audit_id INT AUTO_INCREMENT PRIMARY KEY,
+    book_id INT,
+    book_name VARCHAR(50),
+    author VARCHAR(50),
+    price DECIMAL(10,2),
+    operation VARCHAR(10),
+    audit_date DATETIME
+);
+
+-- =======================================================
+-- Step 2: Create Trigger for UPDATE
+-- =======================================================
+DELIMITER $$
+
+CREATE TRIGGER trg_library_update
+AFTER UPDATE ON Library
+FOR EACH ROW
+BEGIN
+    INSERT INTO Library_Audit(book_id, book_name, author, price, operation, audit_date)
+    VALUES (OLD.book_id, OLD.book_name, OLD.author, OLD.price, 'UPDATE', NOW());
+END$$
+
+DELIMITER ;
+
+-- =======================================================
+-- Step 3: Create Trigger for DELETE
+-- =======================================================
+DELIMITER $$
+
+CREATE TRIGGER trg_library_delete
+AFTER DELETE ON Library
+FOR EACH ROW
+BEGIN
+    INSERT INTO Library_Audit(book_id, book_name, author, price, operation, audit_date)
+    VALUES (OLD.book_id, OLD.book_name, OLD.author, OLD.price, 'DELETE', NOW());
+END$$
+
+DELIMITER ;
+
+-- =======================================================
+-- Step 4: Insert Sample Data
+-- =======================================================
+INSERT INTO Library VALUES (101, 'DBMS Concepts', 'Korth', 500);
+INSERT INTO Library VALUES (102, 'Operating System', 'Galvin', 600);
+
+-- =======================================================
+-- Step 5: Update and Delete to trigger the audit
+-- =======================================================
+UPDATE Library SET price = 550 WHERE book_id = 101;
+DELETE FROM Library WHERE book_id = 102;
+
+-- =======================================================
+-- Step 6: View results
+-- =======================================================
+SELECT * FROM Library;
+SELECT * FROM Library_Audit;
