@@ -27,6 +27,9 @@ CREATE OR REPLACE PROCEDURE proc_Grade (
   p_marks IN NUMBER
 )
 AS
+
+delimiter:
+
   v_class VARCHAR2(30);
 BEGIN
   -- Categorization Logic
@@ -66,3 +69,109 @@ END;
 
 ✅ Step 5: View the Results
 SELECT * FROM Result;
+
+delimiter:
+-- =======================================================
+-- Create database and use it
+-- =======================================================
+CREATE DATABASE IF NOT EXISTS schoolDB;
+USE schoolDB;
+
+-- =======================================================
+-- Drop tables if they exist
+-- =======================================================
+DROP TABLE IF EXISTS Stud_Marks;
+DROP TABLE IF EXISTS Result;
+
+-- =======================================================
+-- Step 1: Create Tables
+-- =======================================================
+CREATE TABLE Stud_Marks (
+  Roll INT(4),
+  Name VARCHAR(30),
+  Total_Marks INT(5)
+);
+
+CREATE TABLE Result (
+  Roll INT(4),
+  Name VARCHAR(30),
+  Class VARCHAR(30)
+);
+
+-- =======================================================
+-- Step 2: Insert Sample Data
+-- =======================================================
+INSERT INTO Stud_Marks VALUES (1, 'Ram', 1450);
+INSERT INTO Stud_Marks VALUES (2, 'Soham', 920);
+INSERT INTO Stud_Marks VALUES (3, 'Mohan', 860);
+INSERT INTO Stud_Marks VALUES (4, 'Om', 700);
+
+-- =======================================================
+-- Step 3: Create Stored Procedure – proc_Grade
+-- =======================================================
+DELIMITER $$
+
+CREATE PROCEDURE proc_Grade(
+  IN p_roll INT,
+  IN p_name VARCHAR(30),
+  IN p_marks INT
+)
+BEGIN
+  DECLARE v_class VARCHAR(30);
+
+  -- Categorization Logic
+  IF p_marks BETWEEN 990 AND 1500 THEN
+    SET v_class = 'Distinction';
+  ELSEIF p_marks BETWEEN 900 AND 989 THEN
+    SET v_class = 'First Class';
+  ELSEIF p_marks BETWEEN 825 AND 899 THEN
+    SET v_class = 'Higher Second Class';
+  ELSE
+    SET v_class = 'Fail';
+  END IF;
+
+  -- Insert result into Result table
+  INSERT INTO Result(Roll, Name, Class) VALUES (p_roll, p_name, v_class);
+
+  -- Display result (MySQL equivalent of DBMS_OUTPUT)
+  SELECT CONCAT('Student: ', p_name, ' | Class: ', v_class) AS Output;
+END$$
+
+DELIMITER ;
+
+-- =======================================================
+-- Step 4: Call Procedure for Each Student
+-- =======================================================
+-- Loop through students and call procedure
+DELIMITER $$
+
+CREATE PROCEDURE process_all_students()
+BEGIN
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE v_roll INT;
+  DECLARE v_name VARCHAR(30);
+  DECLARE v_marks INT;
+  DECLARE cur CURSOR FOR SELECT Roll, Name, Total_Marks FROM Stud_Marks;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+  OPEN cur;
+  read_loop: LOOP
+    FETCH cur INTO v_roll, v_name, v_marks;
+    IF done THEN
+      LEAVE read_loop;
+    END IF;
+    CALL proc_Grade(v_roll, v_name, v_marks);
+  END LOOP;
+  CLOSE cur;
+END$$
+
+DELIMITER ;
+
+-- Execute the loop procedure
+CALL process_all_students();
+
+-- =======================================================
+-- Step 5: View the Results
+-- =======================================================
+SELECT * FROM Result;
+
